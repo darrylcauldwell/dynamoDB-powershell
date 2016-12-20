@@ -8,8 +8,11 @@ Initialize-AWSDefaults -ProfileName DynamoDB -Region eu-west-1
 #>
 
 #create test database table
-$exampleSchema = New-DDBTableSchema | Add-DDBKeySchema -KeyName "Name" -KeyDataType "S"
-$exampleTable = New-DDBTable "myExample" -Schema $exampleSchema -ReadCapacity 5 -WriteCapacity 5
+$dbExist = Get-DDBTable -TableName "myExample"
+If ($dbExist -eq $null){
+      $exampleSchema = New-DDBTableSchema | Add-DDBKeySchema -KeyName "Name" -KeyDataType "S"
+      $exampleTable = New-DDBTable "myExample" -Schema $exampleSchema -ReadCapacity 5 -WriteCapacity 5
+}
 
 #create database connection
 Add-Type -Path (${env:ProgramFiles(x86)}+"\AWS SDK for .NET\bin\Net45\AWSSDK.DynamoDBv2.dll")
@@ -34,7 +37,7 @@ function putDDBItem{
       $val1Obj = New-Object Amazon.DynamoDBv2.Model.AttributeValue
       $val1Obj.S = $val1
       $req.Item.Add($key1, $val1Obj)
-      $dbClient.PutItem($req)
+      $output = $dbClient.PutItem($req)
       }
 
 function getDDBItem{
@@ -58,5 +61,5 @@ putDDBItem -tableName 'myExample' -key 'Name' -val 'Sid' -key1 'Age' -val1 '23'
 
 getDDBItem -tableName 'myExample' -key 'Name' -keyAttrStr 'Bob'
 
-$script:resp.Item.'Age'.S
+Write-Host 'Hugh is' $script:resp.Item.'Age'.S
 $script:resp = $null
